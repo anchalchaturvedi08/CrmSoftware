@@ -1,0 +1,3090 @@
+{
+  "info": {
+    "name": "Cooler CRM API",
+    "description": "After-sales service management API.\n\nRun \"1. Auth > Login as Admin\" first — it stores the token automatically and every other request uses it.\n\nSeed credentials come from `npm run seed --workspace server -- --demo`. Set them in the collection variables below.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4000"
+    },
+    {
+      "key": "adminMobile",
+      "value": "9800000001"
+    },
+    {
+      "key": "adminPassword",
+      "value": "PASTE_FROM_SEED_OUTPUT"
+    },
+    {
+      "key": "ownerMobile",
+      "value": "9800000002"
+    },
+    {
+      "key": "ownerPassword",
+      "value": "PASTE_FROM_SEED_OUTPUT"
+    },
+    {
+      "key": "techMobile",
+      "value": "9800000003"
+    },
+    {
+      "key": "techPassword",
+      "value": "PASTE_FROM_SEED_OUTPUT"
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    },
+    {
+      "key": "refreshToken",
+      "value": ""
+    },
+    {
+      "key": "complaintId",
+      "value": ""
+    },
+    {
+      "key": "customerId",
+      "value": ""
+    },
+    {
+      "key": "productId",
+      "value": ""
+    },
+    {
+      "key": "productModelId",
+      "value": ""
+    },
+    {
+      "key": "serviceCenterId",
+      "value": ""
+    },
+    {
+      "key": "cityId",
+      "value": ""
+    },
+    {
+      "key": "technicianId",
+      "value": ""
+    },
+    {
+      "key": "visitId",
+      "value": ""
+    },
+    {
+      "key": "partId",
+      "value": ""
+    },
+    {
+      "key": "partRequestId",
+      "value": ""
+    },
+    {
+      "key": "partUsageId",
+      "value": ""
+    },
+    {
+      "key": "attachmentId",
+      "value": ""
+    },
+    {
+      "key": "newUserId",
+      "value": ""
+    },
+    {
+      "key": "happyCode",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "0. Setup",
+      "description": "Run this folder once, top to bottom, before anything else.\n\nIt signs you in and captures the IDs of the data the demo seed already created, so every other request has what it needs. In Postman: hover the folder, press the ▸ Run button, then Run.",
+      "item": [
+        {
+          "name": "Step 1 — Login as Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mobile\": \"{{adminMobile}}\",\n  \"password\": \"{{adminPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.accessToken) {",
+                  "  pm.collectionVariables.set('accessToken', body.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', body.refreshToken);",
+                  "  console.log('Signed in as ' + body.user.role + ' — token stored');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Step 2 — Capture a customer",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/customers?limit=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customers"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "const first = body.items && body.items[0];",
+                  "if (first && first.id) {",
+                  "  pm.collectionVariables.set('customerId', first.id);",
+                  "  console.log('customerId = ' + first.id + '  (customer: ' + (first.name || first.modelNumber || first.complaintNumber || '') + ')');",
+                  "} else {",
+                  "  console.warn('No customer found — run the demo seed first.');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Step 3 — Capture a product",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products?limit=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "const first = body.items && body.items[0];",
+                  "if (first && first.id) {",
+                  "  pm.collectionVariables.set('productId', first.id);",
+                  "  console.log('productId = ' + first.id + '  (product: ' + (first.name || first.modelNumber || first.complaintNumber || '') + ')');",
+                  "} else {",
+                  "  console.warn('No product found — run the demo seed first.');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Step 4 — Capture a model for that product",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/product-models?productId={{productId}}&limit=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-models"
+              ],
+              "query": [
+                {
+                  "key": "productId",
+                  "value": "{{productId}}"
+                },
+                {
+                  "key": "limit",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "const first = body.items && body.items[0];",
+                  "if (first && first.id) {",
+                  "  pm.collectionVariables.set('productModelId', first.id);",
+                  "  console.log('productModelId = ' + first.id + '  (model: ' + (first.name || first.modelNumber || first.complaintNumber || '') + ')');",
+                  "} else {",
+                  "  console.warn('No model found — run the demo seed first.');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Step 5 — Capture a service center",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/service-centers?limit=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "service-centers"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "const first = body.items && body.items[0];",
+                  "if (first && first.id) {",
+                  "  pm.collectionVariables.set('serviceCenterId', first.id);",
+                  "  console.log('serviceCenterId = ' + first.id + '  (service center: ' + (first.name || first.modelNumber || first.complaintNumber || '') + ')');",
+                  "} else {",
+                  "  console.warn('No service center found — run the demo seed first.');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Step 6 — Capture a technician",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users?role=TECHNICIAN&limit=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "role",
+                  "value": "TECHNICIAN"
+                },
+                {
+                  "key": "limit",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "const first = body.items && body.items[0];",
+                  "if (first && first.id) {",
+                  "  pm.collectionVariables.set('technicianId', first.id);",
+                  "  console.log('technicianId = ' + first.id + '  (technician: ' + (first.name || first.modelNumber || first.complaintNumber || '') + ')');",
+                  "} else {",
+                  "  console.warn('No technician found — run the demo seed first.');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Step 7 — Capture a part",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/parts?limit=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "parts"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "const first = body.items && body.items[0];",
+                  "if (first && first.id) {",
+                  "  pm.collectionVariables.set('partId', first.id);",
+                  "  console.log('partId = ' + first.id + '  (part: ' + (first.name || first.modelNumber || first.complaintNumber || '') + ')');",
+                  "} else {",
+                  "  console.warn('No part found — run the demo seed first.');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Step 8 — Check what was captured",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health/ready",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health",
+                "ready"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const needed = ['customerId','productId','productModelId','serviceCenterId','technicianId','partId'];",
+                  "const missing = needed.filter((key) => !pm.collectionVariables.get(key));",
+                  "if (missing.length === 0) {",
+                  "  console.log('Setup complete — every ID captured. Move on to folder 5.');",
+                  "} else {",
+                  "  console.warn('Missing: ' + missing.join(', ') + '. Run the demo seed: npm run seed --workspace server -- --demo');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "1. Auth",
+      "description": "Start here. Run \"Login as Admin\" first — it stores the token for every other request.",
+      "item": [
+        {
+          "name": "Login as Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mobile\": \"{{adminMobile}}\",\n  \"password\": \"{{adminPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.accessToken) {",
+                  "  pm.collectionVariables.set('accessToken', body.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', body.refreshToken);",
+                  "  console.log('Signed in as ' + body.user.role + ' — token stored');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login as Service Center Owner",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mobile\": \"{{ownerMobile}}\",\n  \"password\": \"{{ownerPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.accessToken) {",
+                  "  pm.collectionVariables.set('accessToken', body.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', body.refreshToken);",
+                  "  console.log('Signed in as ' + body.user.role + ' — token stored');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login as Technician",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mobile\": \"{{techMobile}}\",\n  \"password\": \"{{techPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.accessToken) {",
+                  "  pm.collectionVariables.set('accessToken', body.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', body.refreshToken);",
+                  "  console.log('Signed in as ' + body.user.role + ' — token stored');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Who am I",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Refresh token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "refresh"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.accessToken) {",
+                  "  pm.collectionVariables.set('accessToken', body.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', body.refreshToken);",
+                  "  console.log('Signed in as ' + body.user.role + ' — token stored');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Change my password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/change-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "change-password"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"current-password\",\n  \"newPassword\": \"a-new-long-passphrase\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Sign out this device",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Dashboard & Reports",
+      "description": "Spec sections 5.1, 9 and 16. Admin and Owner only.",
+      "item": [
+        {
+          "name": "Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dashboard"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Report: complaints",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reports/complaints",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reports",
+                "complaints"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Report: service centers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reports/service-centers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reports",
+                "service-centers"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Report: technicians",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reports/technicians",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reports",
+                "technicians"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Report: products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reports/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reports",
+                "products"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Report: parts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reports/parts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reports",
+                "parts"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Export complaints as CSV",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reports/complaints?format=csv",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reports",
+                "complaints"
+              ],
+              "query": [
+                {
+                  "key": "format",
+                  "value": "csv"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Export complaints as Excel",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reports/complaints?format=xlsx",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reports",
+                "complaints"
+              ],
+              "query": [
+                {
+                  "key": "format",
+                  "value": "xlsx"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Master data",
+      "description": "Admin creates; every role can read the reference data. Customers are Admin only, and serial history outside Admin covers only units in your own work. Spec section 25 Phase 2.\n\nCities are typed, not created: send cityName + state (an Indian state or union territory) and the server files the city, creating it the first time (DECISIONS.md section 32). Territories are one per state, created by the server; /territories and /cities stay readable.",
+      "item": [
+        {
+          "name": "List states (territories, one per state)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/territories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "territories"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List cities",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/cities",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cities"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List service centers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/service-centers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "service-centers"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create service center",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/service-centers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "service-centers"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Kochi Service\",\n  \"code\": \"KOC-01\",\n  \"mobile\": \"9876512345\",\n  \"address\": \"1 Marine Drive\",\n  \"cityName\": \"Kochi\",\n  \"state\": \"Kerala\",\n  \"pincode\": \"682001\",\n  \"servedCities\": [\n    {\n      \"name\": \"Alappuzha\",\n      \"state\": \"Kerala\"\n    }\n  ],\n  \"servedPincodes\": [\n    \"682001\",\n    \"682002\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "const value = body.center && body.center.id;",
+                  "if (value) {",
+                  "  pm.collectionVariables.set('serviceCenterId', value);",
+                  "  console.log('serviceCenterId = ' + value);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Service center overview (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/service-centers/{{serviceCenterId}}/overview",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "service-centers",
+                "{{serviceCenterId}}",
+                "overview"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Deactivate service center",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/service-centers/{{serviceCenterId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "service-centers",
+                "{{serviceCenterId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isActive\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "List products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create product",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Tower Cooler 30L\",\n  \"code\": \"TC30\",\n  \"defaultWarrantyMonths\": 12\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "const value = body.product && body.product.id;",
+                  "if (value) {",
+                  "  pm.collectionVariables.set('productId', value);",
+                  "  console.log('productId = ' + value);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List product models",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/product-models",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-models"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create product model",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/product-models",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-models"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"{{productId}}\",\n  \"modelNumber\": \"TC30-A\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "const value = body.model && body.model.id;",
+                  "if (value) {",
+                  "  pm.collectionVariables.set('productModelId', value);",
+                  "  console.log('productModelId = ' + value);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List customers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/customers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customers"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create customer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/customers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customers"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ravi Menon\",\n  \"mobile\": \"9812345678\",\n  \"address\": \"12 Beach Road\",\n  \"cityName\": \"Kochi\",\n  \"state\": \"Kerala\",\n  \"pincode\": \"682001\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "const value = body.customer && body.customer.id;",
+                  "if (value) {",
+                  "  pm.collectionVariables.set('customerId', value);",
+                  "  console.log('customerId = ' + value);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Customer service history",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/customers/{{customerId}}/history",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customers",
+                "{{customerId}}",
+                "history"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Serial number history",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/serial-history/SN-0001",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "serial-history",
+                "SN-0001"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Users & technicians",
+      "description": "Admin creates anyone; an Owner creates technicians for their own centre only (spec 3.2).",
+      "item": [
+        {
+          "name": "List users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create technician (as Owner)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"TECHNICIAN\",\n  \"name\": \"New Technician\",\n  \"mobile\": \"9812340099\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "const value = body.user && body.user.id;",
+                  "if (value) {",
+                  "  pm.collectionVariables.set('newUserId', value);",
+                  "  console.log('newUserId = ' + value);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create service center owner (as Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"SERVICE_CENTER_OWNER\",\n  \"name\": \"New Owner\",\n  \"mobile\": \"9812340098\",\n  \"serviceCenterId\": \"{{serviceCenterId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Deactivate user",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{newUserId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{newUserId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isActive\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Reset a user password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{newUserId}}/reset-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{newUserId}}",
+                "reset-password"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Complaints",
+      "description": "Spec section 6 and Workflow A. Only Admin can create.",
+      "item": [
+        {
+          "name": "Recommend service centers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/complaints/recommendations?pincode=302001",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "complaints",
+                "recommendations"
+              ],
+              "query": [
+                {
+                  "key": "pincode",
+                  "value": "302001"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create complaint",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/complaints",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "complaints"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": \"{{customerId}}\",\n  \"productId\": \"{{productId}}\",\n  \"productModelId\": \"{{productModelId}}\",\n  \"serialNumber\": \"SN-0001\",\n  \"category\": \"Not cooling\",\n  \"description\": \"Cooler runs but blows warm air.\",\n  \"priority\": \"HIGH\",\n  \"warrantyStatus\": \"IN_WARRANTY\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "const value = body.complaint && body.complaint.id;",
+                  "if (value) {",
+                  "  pm.collectionVariables.set('complaintId', value);",
+                  "  console.log('complaintId = ' + value);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List complaints",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/complaints",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "complaints"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Open complaints only",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/complaints?open=true",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "complaints"
+              ],
+              "query": [
+                {
+                  "key": "open",
+                  "value": "true"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Open complaints past their SLA",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/complaints?slaBreached=true",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "complaints"
+              ],
+              "query": [
+                {
+                  "key": "slaBreached",
+                  "value": "true"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search by mobile as shown on screen",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/complaints?search=98111%2011111",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "complaints"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "98111%2011111"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search complaints",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/complaints?search=SN-0001&status=NEW",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "complaints"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "SN-0001"
+                },
+                {
+                  "key": "status",
+                  "value": "NEW"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Complaint detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/complaints/{{complaintId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "complaints",
+                "{{complaintId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Complaint timeline",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/complaints/{{complaintId}}/timeline",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "complaints",
+                "{{complaintId}}",
+                "timeline"
+              ]
+            }
+          }
+        },
+        {
+          "name": "WhatsApp link (reveals Happy Code)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/complaints/{{complaintId}}/whatsapp",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "complaints",
+                "{{complaintId}}",
+                "whatsapp"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "const value = body.happyCode;",
+                  "if (value) {",
+                  "  pm.collectionVariables.set('happyCode', value);",
+                  "  console.log('happyCode = ' + value);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "6. Workflow",
+      "description": "The lifecycle in order. Switch login between Admin, Owner and Technician as the folder notes say.",
+      "item": [
+        {
+          "name": "ADMIN: assign service center",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/complaints/{{complaintId}}/assign-service-center",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "complaints",
+                "{{complaintId}}",
+                "assign-service-center"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceCenterId\": \"{{serviceCenterId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "OWNER: assign technician",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/complaints/{{complaintId}}/assign-technician",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "complaints",
+                "{{complaintId}}",
+                "assign-technician"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"technicianId\": \"{{technicianId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "OWNER: schedule visit",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/complaints/{{complaintId}}/visits",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "complaints",
+                "{{complaintId}}",
+                "visits"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"scheduledAt\": \"2026-12-31T10:00:00.000Z\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "const value = body.visit && body.visit.id;",
+                  "if (value) {",
+                  "  pm.collectionVariables.set('visitId', value);",
+                  "  console.log('visitId = ' + value);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TECH: start visit",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/complaints/{{complaintId}}/start-visit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "complaints",
+                "{{complaintId}}",
+                "start-visit"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerAvailability\": \"CUSTOMER_AVAILABLE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "TECH: submit resolution",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/complaints/{{complaintId}}/resolution",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "complaints",
+                "{{complaintId}}",
+                "resolution"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"diagnosis\": {\n    \"problemFound\": \"Water pump seized\"\n  },\n  \"workPerformed\": {\n    \"details\": \"Replaced pump and flushed the tank\"\n  },\n  \"resolution\": {\n    \"result\": \"Cooling restored\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "OWNER: accept resolution",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/complaints/{{complaintId}}/review-resolution",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "complaints",
+                "{{complaintId}}",
+                "review-resolution"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"outcome\": \"ACCEPTED\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "OWNER: reject and require revisit",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/complaints/{{complaintId}}/review-resolution",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "complaints",
+                "{{complaintId}}",
+                "review-resolution"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"outcome\": \"REVISIT_REQUIRED\",\n  \"reason\": \"Customer says it is still warm\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "ADMIN: require rework (customer says not fixed)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/complaints/{{complaintId}}/require-rework",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "complaints",
+                "{{complaintId}}",
+                "require-rework"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Customer says it still blows warm air\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "ADMIN: verify Happy Code",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/complaints/{{complaintId}}/verify-happy-code",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "complaints",
+                "{{complaintId}}",
+                "verify-happy-code"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"{{happyCode}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "ADMIN: close complaint",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/complaints/{{complaintId}}/close",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "complaints",
+                "{{complaintId}}",
+                "close"
+              ]
+            }
+          }
+        },
+        {
+          "name": "ADMIN: rate service center",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/complaints/{{complaintId}}/rating",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "complaints",
+                "{{complaintId}}",
+                "rating"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stars\": 5,\n  \"note\": \"Great work\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "ADMIN: reopen complaint",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/complaints/{{complaintId}}/reopen",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "complaints",
+                "{{complaintId}}",
+                "reopen"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Same fault returned within a week\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "ADMIN: regenerate Happy Code",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/complaints/{{complaintId}}/regenerate-happy-code",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "complaints",
+                "{{complaintId}}",
+                "regenerate-happy-code"
+              ]
+            }
+          }
+        },
+        {
+          "name": "ADMIN: cancel complaint",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/complaints/{{complaintId}}/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "complaints",
+                "{{complaintId}}",
+                "cancel"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Raised by mistake\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Mark waiting for parts",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/complaints/{{complaintId}}/waiting-for-parts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "complaints",
+                "{{complaintId}}",
+                "waiting-for-parts"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Fan motor out of stock\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Resume work",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/complaints/{{complaintId}}/resume-work",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "complaints",
+                "{{complaintId}}",
+                "resume-work"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Visits",
+      "description": "Spec sections 9 and 10.",
+      "item": [
+        {
+          "name": "Schedule / calendar",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/visits",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "visits"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Today only",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/visits?date=2026-09-15",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "visits"
+              ],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "2026-09-15"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "ADMIN: finished visits, one centre",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/visits?status=COMPLETED,CANCELLED&serviceCenterId={{serviceCenterId}}&sort=desc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "visits"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "COMPLETED,CANCELLED"
+                },
+                {
+                  "key": "serviceCenterId",
+                  "value": "{{serviceCenterId}}"
+                },
+                {
+                  "key": "sort",
+                  "value": "desc"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "TECH: my jobs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/visits/my-jobs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "visits",
+                "my-jobs"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Visit detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/visits/{{visitId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "visits",
+                "{{visitId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Reschedule visit",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/visits/{{visitId}}/reschedule",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "visits",
+                "{{visitId}}",
+                "reschedule"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"scheduledAt\": \"2026-12-31T14:00:00.000Z\",\n  \"reason\": \"Customer asked for afternoon\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Cancel visit",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/visits/{{visitId}}/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "visits",
+                "{{visitId}}",
+                "cancel"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Customer not available all week\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Parts & stock",
+      "description": "Spec section 11. Stock moves only when usage is finalised.",
+      "item": [
+        {
+          "name": "List parts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/parts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "parts"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create part (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/parts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "parts"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Drain Valve\",\n  \"code\": \"VALVE-01\",\n  \"unit\": \"PIECE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "const value = body.part && body.part.id;",
+                  "if (value) {",
+                  "  pm.collectionVariables.set('partId', value);",
+                  "  console.log('partId = ' + value);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Stock levels",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/parts/stock/list",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "parts",
+                "stock",
+                "list"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Low stock only",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/parts/stock/list?lowOnly=true",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "parts",
+                "stock",
+                "list"
+              ],
+              "query": [
+                {
+                  "key": "lowOnly",
+                  "value": "true"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Set stock (stocktake)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/parts/stock",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "parts",
+                "stock"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partId\": \"{{partId}}\",\n  \"availableQuantity\": 20,\n  \"minimumStock\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Adjust stock (delivery)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/parts/stock/adjust",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "parts",
+                "stock",
+                "adjust"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partId\": \"{{partId}}\",\n  \"delta\": 10,\n  \"reason\": \"Delivery received\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "TECH: request a part",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/complaints/{{complaintId}}/part-requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "complaints",
+                "{{complaintId}}",
+                "part-requests"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partId\": \"{{partId}}\",\n  \"quantityRequested\": 2,\n  \"reason\": \"Pump seized\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "const value = body.request && body.request.id;",
+                  "if (value) {",
+                  "  pm.collectionVariables.set('partRequestId', value);",
+                  "  console.log('partRequestId = ' + value);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Request queue",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/parts/requests/list",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "parts",
+                "requests",
+                "list"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Requests still waiting",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/parts/requests/list?status=REQUESTED,APPROVED",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "parts",
+                "requests",
+                "list"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "REQUESTED,APPROVED"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "OWNER: issue the part",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/parts/requests/{{partRequestId}}/decide",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "parts",
+                "requests",
+                "{{partRequestId}}",
+                "decide"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ISSUED\",\n  \"quantityIssued\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "OWNER: mark unavailable",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/parts/requests/{{partRequestId}}/decide",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "parts",
+                "requests",
+                "{{partRequestId}}",
+                "decide"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"UNAVAILABLE\",\n  \"remarks\": \"None left, reordering\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "TECH: record parts used",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/complaints/{{complaintId}}/part-usage",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "complaints",
+                "{{complaintId}}",
+                "part-usage"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partId\": \"{{partId}}\",\n  \"quantity\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "const value = body.usage && body.usage.id;",
+                  "if (value) {",
+                  "  pm.collectionVariables.set('partUsageId', value);",
+                  "  console.log('partUsageId = ' + value);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List usage on a complaint",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/complaints/{{complaintId}}/part-usage",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "complaints",
+                "{{complaintId}}",
+                "part-usage"
+              ]
+            }
+          }
+        },
+        {
+          "name": "OWNER: finalise usage (moves stock)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/parts/usage/{{partUsageId}}/finalize",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "parts",
+                "usage",
+                "{{partUsageId}}",
+                "finalize"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "9. Attachments",
+      "description": "Upload is multipart. In Postman, set the body to form-data with a \"file\" key of type File.",
+      "item": [
+        {
+          "name": "Upload photo (form-data)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/complaints/{{complaintId}}/attachments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "complaints",
+                "{{complaintId}}",
+                "attachments"
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "kind",
+                  "value": "BEFORE_PHOTO",
+                  "type": "text"
+                },
+                {
+                  "key": "caption",
+                  "value": "Cooler as found",
+                  "type": "text"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List attachments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/complaints/{{complaintId}}/attachments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "complaints",
+                "{{complaintId}}",
+                "attachments"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "const first = body.items && body.items[0];",
+                  "if (first && first.id) {",
+                  "  pm.collectionVariables.set('attachmentId', first.id);",
+                  "  console.log('attachmentId = ' + first.id + '  (attachment: ' + (first.name || first.modelNumber || first.complaintNumber || '') + ')');",
+                  "} else {",
+                  "  console.warn('No attachment found — run the demo seed first.');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Download file",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/attachments/{{attachmentId}}/file",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "attachments",
+                "{{attachmentId}}",
+                "file"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "10. SLA, Audit & Settings",
+      "description": "Spec sections 4, 14 and 17.",
+      "item": [
+        {
+          "name": "SLA rules",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/sla-rules",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "sla-rules"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update an SLA rule (Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/sla-rules/CRITICAL",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "sla-rules",
+                "CRITICAL"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"responseHours\": 1,\n  \"resolutionHours\": 6\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Audit log (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/audit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "audit"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Audit filtered by entity",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/audit?entityType=Complaint",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "audit"
+              ],
+              "query": [
+                {
+                  "key": "entityType",
+                  "value": "Complaint"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Audit: sign-ins only",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/audit?category=sign-in",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "audit"
+              ],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "sign-in"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Audit: session renewals (hidden by default)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/audit?action=TOKEN_REFRESHED",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "audit"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "TOKEN_REFRESHED"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Complaint activity, all complaints (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/audit/activity",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "audit",
+                "activity"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Complaint activity for one complaint number",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/audit/activity?complaintNumber=CMP-2026-000001",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "audit",
+                "activity"
+              ],
+              "query": [
+                {
+                  "key": "complaintNumber",
+                  "value": "CMP-2026-000001"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Settings: rules in force (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/settings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "settings"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "11. Health",
+      "description": "No authentication required.",
+      "item": [
+        {
+          "name": "Liveness",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Readiness",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health/ready",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health",
+                "ready"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

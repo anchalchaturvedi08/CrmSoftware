@@ -1,0 +1,37 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# local MongoDB instance (project-local replica set, see DECISIONS.md §2)
+.mongo/
+
+# env & secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# build output
+dist/
+build/
+*.tsbuildinfo
+
+# uploads / attachments (local storage driver)
+server/storage/
+!server/storage/.gitkeep
+
+# logs
+*.log
+logs/
+npm-debug.log*
+
+# editor / OS
+.vscode/*
+!.vscode/settings.json
+.idea/
+.DS_Store
+Thumbs.db
+
+# test output
+coverage/

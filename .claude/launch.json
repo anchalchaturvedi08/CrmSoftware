@@ -1,0 +1,39 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "api",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 4000
+    },
+    {
+      "name": "web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--workspace", "client", "--", "--port", "5174", "--strictPort"],
+      "port": 5174,
+      "url": "http://127.0.0.1:5174"
+    },
+    {
+      "name": "web-center",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--workspace", "client", "--", "--port", "5175", "--strictPort"],
+      "port": 5175,
+      "url": "http://127.0.0.1:5175"
+    },
+    {
+      "name": "web-tech",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--workspace", "client", "--", "--port", "5176", "--strictPort"],
+      "port": 5176,
+      "url": "http://127.0.0.1:5176"
+    },
+    {
+      "name": "web-build",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "preview", "--workspace", "client", "--", "--port", "4173", "--strictPort"],
+      "port": 4173,
+      "url": "http://127.0.0.1:4173"
+    }
+  ]
+}

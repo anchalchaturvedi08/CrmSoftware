@@ -1,0 +1,41 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "outDir": "dist",
+    "rootDir": "src",
+
+    /* Strictness. The whole point of choosing TypeScript here: MongoDB
+       enforces no schema and no foreign keys, so the compiler is the only
+       structural guard we have. Do not loosen these.
+
+       One flag is deliberately absent: `exactOptionalPropertyTypes`. Mongoose's
+       type definitions are not written for it — `SchemaOptions` and `Schema<T>`
+       stop unifying, and every model needs a cast to compile. Casts around the
+       schema layer would cost more safety than the flag buys, so it stays off.
+       Everything else here is non-negotiable. */
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "verbatimModuleSyntax": true,
+    "forceConsistentCasingInFileNames": true,
+
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "sourceMap": true,
+    "declaration": false,
+
+    "baseUrl": ".",
+    "paths": {
+      "#/*": ["src/*"]
+    }
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}
