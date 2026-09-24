@@ -4,6 +4,7 @@
  * Kept separate from `index.ts` so tests can mount the app without binding a
  * port or owning the process lifecycle.
  */
+import path from 'node:path';
 import express, { type Express, type Request, type Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -36,7 +37,20 @@ export function createApp(): Express {
   app.set('trust proxy', 1);
   app.disable('x-powered-by');
 
-  app.use(helmet());
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          imgSrc: ["'self'", 'data:', 'blob:'],
+          connectSrc: ["'self'"],
+          fontSrc: ["'self'", 'data:'],
+        },
+      },
+    }),
+  );
   app.use(cors({ origin: true, credentials: true }));
   app.use(express.json({ limit: '1mb' }));
   app.use(express.urlencoded({ extended: true }));
@@ -196,6 +210,14 @@ export function createApp(): Express {
   /* Mounted at the root so paths read as /territories, /cities, /customers —
      "masters" is how we group the code, not a concept the API should expose. */
   app.use('/', mastersRouter);
+
+  if (isProduction) {
+    const clientDist = path.resolve(process.cwd(), 'client-dist');
+    app.use(express.static(clientDist));
+    app.get('{*path}', (_req: Request, res: Response) => {
+      res.sendFile(path.join(clientDist, 'index.html'));
+    });
+  }
 
   app.use(notFoundHandler);
   app.use(errorHandler);
