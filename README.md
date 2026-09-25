@@ -1,22 +1,57 @@
-# Cooler CRM / After-Sales Service Management System
+# Cooler CRM
 
-Internal after-sales service operations platform for a cooler company.
-Three roles — **Admin → Service Center Owner → Technician** — around one central
-object, the **Complaint**.
+Full-stack after-sales service management system for consumer durables companies. Tracks the complete lifecycle of a service complaint — from customer registration through service center assignment, technician dispatch, parts usage, visit scheduling, and customer-confirmed closure via Happy Code.
+
+Three roles — **Admin**, **Service Center Owner**, **Technician** — each with a dedicated dashboard, centered around one core object: the **Complaint**.
+
+**Live Demo:** [coolercrm.anchal.dev](https://coolercrm.anchal.dev)
+
+### Demo Credentials
+
+| Role | Mobile | Password |
+|------|--------|----------|
+| Admin | `9800000001` | `DemoAccess@123` |
+| Service Center | `9800000002` | `DemoAccess@123` |
+| Technician | `9800000003` | `DemoAccess@123` |
+
+> Click any role card on the login page to auto-fill credentials.
+
+---
 
 - **Specification (source of truth):** [`Cooler_CRM_Final_Master_Implementation_Plan.md`](Cooler_CRM_Final_Master_Implementation_Plan.md)
 - **Decisions, deviations and assumptions:** [`DECISIONS.md`](DECISIONS.md)
 
-## Stack
+## Tech Stack
 
-MongoDB 8.2 · Express 5 · React 19 · Node 26 — all TypeScript, strict mode.
+MongoDB · Express 5 · React 19 · Node 22+ — all TypeScript, strict mode.
+
+| Layer | Technologies |
+|-------|-------------|
+| **Frontend** | React 19, TypeScript, Tailwind CSS, React Router, Recharts, Lucide Icons, Vite |
+| **Backend** | Node.js 22+, Express 5, TypeScript, Zod, Pino |
+| **Database** | MongoDB (replica set with transactions) |
+| **Auth** | JWT (access + refresh tokens), scrypt password hashing |
+| **Encryption** | AES-256-GCM (Happy Code) |
+
+## Features
+
+- **Role-based dashboards** — Admin, Service Center Owner, and Technician each get a tailored view with relevant metrics and charts
+- **Complaint lifecycle** — Register, assign service center, dispatch technician, track visits, close with customer confirmation (Happy Code)
+- **Parts management** — Product catalog, part inventory, stock tracking per service center
+- **Visit scheduling** — Technician visit logging with status updates, attachments, and history
+- **SLA tracking** — Configurable SLA rules by complaint priority with real-time breach monitoring
+- **Territory management** — Territories, cities, service centers, and pincode-based complaint routing
+- **Reports & analytics** — Dashboard charts, complaint reports, SLA compliance, Excel/CSV export
+- **Audit trail** — Full activity timeline on every complaint
+- **File attachments** — Access-controlled file uploads on complaints and visits
+- **PWA ready** — Installable as a phone app (Technician portal designed for mobile)
 
 ## Prerequisites
 
-- Node 22+ (verified on 26.3.1)
+- Node.js >= 22
 - MongoDB Server 8.x and `mongosh` installed locally
 
-## Getting started
+## Getting Started
 
 Install dependencies. **Use PowerShell, not Git Bash** — Git Bash exports a
 POSIX `PATH` that the `cmd.exe` npm spawns for lifecycle scripts cannot read
@@ -81,18 +116,17 @@ The web app calls the API through `/api`, which Vite proxies to port 4000 — so
 there is no CORS to configure, and the same client code works unchanged behind
 a reverse proxy in production.
 
-| Portal | Signed in as | Status |
+### Role Portals
+
+| Portal | Mobile | What's inside |
 |---|---|---|
-| Admin | `9800000001` | Complete: dashboard (with chosen dates and a service-center filter), complaints, visits schedule, customers (with their products and warranty), products, service centers (each with its own page and ratings), users, parts, SLA, reports with Excel/CSV download, audit log, settings. Cities are typed, states come from the Indian list — nothing to set up first |
-| Service Center | `9800000002` | Complete: dashboard, complaints, visits, technicians, parts, reports, profile |
-| Technician | `9800000003` | Complete: My Jobs, job detail, visit flow, Schedule, History, Profile |
+| **Admin** | `9800000001` | Dashboard (date range + service center filter), complaints, visits schedule, customers (with products & warranty), products, service centers (with ratings), users, parts, SLA rules, reports (Excel/CSV), audit log, settings |
+| **Service Center** | `9800000002` | Dashboard, complaints, visits, technicians, parts, reports, profile |
+| **Technician** | `9800000003` | My Jobs, job detail, visit flow, schedule, history, profile |
 
-The technician app is designed for a phone. To see it as a technician would on
-a computer, open the browser's developer tools and switch on device mode (in
-Chrome: F12, then Ctrl+Shift+M).
+> The Technician portal is designed for mobile. To preview on desktop, open DevTools and enable device mode (Chrome: F12 → Ctrl+Shift+M).
 
-It is also installable as a phone app, but only from a production build served
-over HTTPS — so installing on a real phone waits until the app is hosted. To
+The app is installable as a PWA on phones when served over HTTPS. To
 try the production build locally:
 
 ```bash
