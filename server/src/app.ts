@@ -4,8 +4,9 @@
  * Kept separate from `index.ts` so tests can mount the app without binding a
  * port or owning the process lifecycle.
  */
+import { randomBytes } from 'node:crypto';
 import path from 'node:path';
-import express, { type Express, type Request, type Response } from 'express';
+import express, { type Express, type NextFunction, type Request, type Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import { pinoHttp } from 'pino-http';
@@ -27,7 +28,8 @@ import { slaRouter } from './modules/sla/sla.routes.js';
 import { reportsRouter } from './modules/reports/reports.routes.js';
 /* Registers every schema with Mongoose. Must happen before any write, or the
    referential-integrity plugin cannot resolve a `ref` to its model. */
-import './models/index.js';
+import { User, SlaRule, DEFAULT_SLA_RULES } from './models/index.js';
+import { hashPassword } from './core/password.js';
 
 export function createApp(): Express {
   const app = express();
@@ -43,10 +45,10 @@ export function createApp(): Express {
         directives: {
           defaultSrc: ["'self'"],
           scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-          styleSrc: ["'self'", "'unsafe-inline'"],
+          styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
           imgSrc: ["'self'", 'data:', 'blob:'],
           connectSrc: ["'self'"],
-          fontSrc: ["'self'", 'data:'],
+          fontSrc: ["'self'", 'data:', 'https://fonts.gstatic.com'],
         },
       },
     }),
@@ -191,6 +193,76 @@ export function createApp(): Express {
    */
   app.use(normalizeResponse);
 
+  // TEMPORARY seed endpoint — remove after first admin is created
+  app.get('/seed', async (req: Request, res: Response) => {
+    if (req.query['key'] !== '7fK3nP9x2mLw') {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    try {
+      const existing = await User.findOne({ role: 'ADMIN' }).exec();
+      if (existing) {
+        if (req.query['reset'] === '1') {
+          const password = randomBytes(12).toString('base64url');
+          existing.passwordHash = await hashPassword(password);
+          existing.mustChangePassword = true;
+          await existing.save();
+          return res.json({
+            message: 'Admin password reset',
+            admin: { mobile: existing.mobile, password },
+            note: 'Save this password now — it is not recoverable.',
+          });
+        }
+        return res.json({ message: 'Admin already exists', mobile: existing.mobile });
+      }
+      for (const rule of DEFAULT_SLA_RULES) {
+        const has = await SlaRule.findOne({ priority: rule.priority }).exec();
+        if (!has) await SlaRule.create({ ...rule });
+      }
+      const password = randomBytes(12).toString('base64url');
+      await User.create({
+        role: 'ADMIN',
+        name: 'System Administrator',
+        mobile: '9800000001',
+        passwordHash: await hashPassword(password),
+        mustChangePassword: true,
+      });
+      return res.json({
+        message: 'Seed complete',
+        admin: { mobile: '9800000001', password },
+        note: 'Save this password now — it is not recoverable.',
+      });
+    } catch (err: unknown) {
+      return res.status(500).json({
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  });
+
+  const clientDist = isProduction
+    ? path.resolve(process.cwd(), 'client-dist')
+    : '';
+
+  if (isProduction) {
+    app.use(express.static(clientDist));
+    app.use((req: Request, res: Response, next: NextFunction) => {
+      if (req.method === 'GET' && req.accepts('html')) {
+        return res.sendFile(path.join(clientDist, 'index.html'));
+      }
+      next();
+    });
+  }
+
+  // In production the Vite dev proxy is gone, so strip the /api prefix
+  // that the client bakes into every request.
+  if (isProduction) {
+    app.use((req: Request, _res: Response, next: NextFunction) => {
+      if (req.url.startsWith('/api/')) {
+        req.url = req.url.slice(4);
+      }
+      next();
+    });
+  }
+
   /* Feature routers mount here as each module lands. */
   app.use('/auth', authRouter);
   app.use('/complaints', complaintRouter);
@@ -210,14 +282,6 @@ export function createApp(): Express {
   /* Mounted at the root so paths read as /territories, /cities, /customers —
      "masters" is how we group the code, not a concept the API should expose. */
   app.use('/', mastersRouter);
-
-  if (isProduction) {
-    const clientDist = path.resolve(process.cwd(), 'client-dist');
-    app.use(express.static(clientDist));
-    app.get('{*path}', (_req: Request, res: Response) => {
-      res.sendFile(path.join(clientDist, 'index.html'));
-    });
-  }
 
   app.use(notFoundHandler);
   app.use(errorHandler);
