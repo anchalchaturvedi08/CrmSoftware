@@ -195,7 +195,7 @@ export function createApp(): Express {
 
   // TEMPORARY seed endpoint — remove after deployment is stable
   app.get('/seed', async (req: Request, res: Response) => {
-    if (req.query['key'] !== '7fK3nP9x2mLw') {
+    if (!config.SEED_KEY || req.query['key'] !== config.SEED_KEY) {
       return res.status(403).json({ error: 'Forbidden' });
     }
     try {

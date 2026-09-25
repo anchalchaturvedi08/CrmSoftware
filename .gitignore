@@ -33,5 +33,12 @@ npm-debug.log*
 .DS_Store
 Thumbs.db
 
+# deployment bundles
+server-bundle.cjs
+server-bundle.cjs.map
+app.cjs
+*.tar.gz
+*.zip
+
 # test output
 coverage/

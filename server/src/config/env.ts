@@ -61,6 +61,9 @@ const envSchema = z.object({
   /* A 6-digit code is only 10^6 possibilities, so verification is capped. */
   HAPPY_CODE_MAX_ATTEMPTS: z.coerce.number().int().positive().default(5),
 
+  /* ---- Seed endpoint --------------------------------------------------- */
+  SEED_KEY: z.string().min(1).optional(),
+
   /* ---- SLA (spec §14: configurable, not hard-coded) -------------------- */
   SLA_PAUSE_ON_WAITING_PARTS: booleanish.default(false),
   SLA_PAUSE_ON_REVISIT_REQUIRED: booleanish.default(false),
