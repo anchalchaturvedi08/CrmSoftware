@@ -28,7 +28,7 @@ import { slaRouter } from './modules/sla/sla.routes.js';
 import { reportsRouter } from './modules/reports/reports.routes.js';
 /* Registers every schema with Mongoose. Must happen before any write, or the
    referential-integrity plugin cannot resolve a `ref` to its model. */
-import { User, SlaRule, DEFAULT_SLA_RULES } from './models/index.js';
+import { User, SlaRule, DEFAULT_SLA_RULES, Territory, City, ServiceCenter, Product, ProductModel, Part, PartStock, Customer } from './models/index.js';
 import { hashPassword } from './core/password.js';
 
 export function createApp(): Express {
@@ -193,44 +193,110 @@ export function createApp(): Express {
    */
   app.use(normalizeResponse);
 
-  // TEMPORARY seed endpoint — remove after first admin is created
+  // TEMPORARY seed endpoint — remove after deployment is stable
   app.get('/seed', async (req: Request, res: Response) => {
     if (req.query['key'] !== '7fK3nP9x2mLw') {
       return res.status(403).json({ error: 'Forbidden' });
     }
     try {
-      const existing = await User.findOne({ role: 'ADMIN' }).exec();
-      if (existing) {
-        if (req.query['reset'] === '1') {
-          const password = randomBytes(12).toString('base64url');
-          existing.passwordHash = await hashPassword(password);
-          existing.mustChangePassword = true;
-          await existing.save();
-          return res.json({
-            message: 'Admin password reset',
-            admin: { mobile: existing.mobile, password },
-            note: 'Save this password now — it is not recoverable.',
-          });
-        }
-        return res.json({ message: 'Admin already exists', mobile: existing.mobile });
-      }
+      const pw = typeof req.query['password'] === 'string' && req.query['password'].length >= 12
+        ? req.query['password']
+        : randomBytes(12).toString('base64url');
+      const passwordHash = await hashPassword(pw);
+      const results: Record<string, string> = {};
+
+      // SLA rules
       for (const rule of DEFAULT_SLA_RULES) {
         const has = await SlaRule.findOne({ priority: rule.priority }).exec();
         if (!has) await SlaRule.create({ ...rule });
       }
-      const password = randomBytes(12).toString('base64url');
-      await User.create({
-        role: 'ADMIN',
-        name: 'System Administrator',
-        mobile: '9800000001',
-        passwordHash: await hashPassword(password),
-        mustChangePassword: true,
-      });
-      return res.json({
-        message: 'Seed complete',
-        admin: { mobile: '9800000001', password },
-        note: 'Save this password now — it is not recoverable.',
-      });
+      results.sla = 'ready';
+
+      // Admin
+      const existingAdmin = await User.findOne({ role: 'ADMIN' }).exec();
+      if (existingAdmin) {
+        if (req.query['reset'] === '1') {
+          existingAdmin.passwordHash = passwordHash;
+          existingAdmin.mustChangePassword = false;
+          await existingAdmin.save();
+          results.admin = `${existingAdmin.mobile} — password reset`;
+        } else {
+          results.admin = `${existingAdmin.mobile} — already exists`;
+        }
+      } else {
+        await User.create({ role: 'ADMIN', name: 'System Administrator', mobile: '9800000001', passwordHash, mustChangePassword: false });
+        results.admin = '9800000001 — created';
+      }
+
+      // Demo data
+      if (req.query['demo'] === '1') {
+        // Territory
+        const territory = (await Territory.findOne({ code: 'RAJASTHAN' }).exec())
+          ?? (await Territory.create({ name: 'Rajasthan', code: 'RAJASTHAN' }));
+
+        // City
+        const city = (await City.findOne({ name: /^jaipur$/i }).exec())
+          ?? (await City.create({ name: 'Jaipur', state: 'Rajasthan', territoryId: territory._id }));
+
+        // Service Center
+        const center = (await ServiceCenter.findOne({ code: 'JAI-01' }).exec())
+          ?? (await ServiceCenter.create({
+            name: 'Jaipur Central Service', code: 'JAI-01', mobile: '9876500000',
+            address: '12 Station Road, Jaipur', cityId: city._id, pincode: '302001',
+            territoryId: territory._id, servedCityIds: [city._id], servedPincodes: ['302001', '302002'],
+          }));
+        results.serviceCenter = `${center.code} — ready`;
+
+        // Service Center Owner
+        const existingOwner = await User.findOne({ mobile: '9800000002' }).exec();
+        if (existingOwner) {
+          if (req.query['reset'] === '1') {
+            existingOwner.passwordHash = passwordHash;
+            existingOwner.mustChangePassword = false;
+            await existingOwner.save();
+            results.owner = '9800000002 — password reset';
+          } else {
+            results.owner = '9800000002 — already exists';
+          }
+        } else {
+          await User.create({ role: 'SERVICE_CENTER_OWNER', name: 'Center Owner', mobile: '9800000002', passwordHash, serviceCenterId: center._id, mustChangePassword: false });
+          results.owner = '9800000002 — created';
+        }
+
+        // Technician
+        const existingTech = await User.findOne({ mobile: '9800000003' }).exec();
+        if (existingTech) {
+          if (req.query['reset'] === '1') {
+            existingTech.passwordHash = passwordHash;
+            existingTech.mustChangePassword = false;
+            await existingTech.save();
+            results.technician = '9800000003 — password reset';
+          } else {
+            results.technician = '9800000003 — already exists';
+          }
+        } else {
+          await User.create({ role: 'TECHNICIAN', name: 'Field Technician', mobile: '9800000003', passwordHash, serviceCenterId: center._id, mustChangePassword: false });
+          results.technician = '9800000003 — created';
+        }
+
+        // Product
+        const product = (await Product.findOne({ code: 'DC50' }).exec())
+          ?? (await Product.create({ name: 'Desert Cooler 50L', code: 'DC50', category: 'Desert Cooler', defaultWarrantyMonths: 12 }));
+        for (const m of ['DC50-X', 'DC50-PRO']) {
+          if (!(await ProductModel.findOne({ productId: product._id, modelNumber: m }).exec())) {
+            await ProductModel.create({ productId: product._id, modelNumber: m });
+          }
+        }
+        results.products = 'DC50 (DC50-X, DC50-PRO) — ready';
+
+        // Customer
+        if (!(await Customer.findOne({ mobile: '9811111111' }).exec())) {
+          await Customer.create({ name: 'Anita Sharma', mobile: '9811111111', address: '4 Lake View Colony', cityId: city._id, state: 'Rajasthan', pincode: '302001' });
+        }
+        results.customer = 'Anita Sharma (9811111111) — ready';
+      }
+
+      return res.json({ message: 'Seed complete', password: pw, results });
     } catch (err: unknown) {
       return res.status(500).json({
         error: err instanceof Error ? err.message : String(err),
@@ -245,7 +311,7 @@ export function createApp(): Express {
   if (isProduction) {
     app.use(express.static(clientDist));
     app.use((req: Request, res: Response, next: NextFunction) => {
-      if (req.method === 'GET' && req.accepts('html')) {
+      if (req.method === 'GET' && req.accepts('html') && !req.url.startsWith('/api/')) {
         return res.sendFile(path.join(clientDist, 'index.html'));
       }
       next();

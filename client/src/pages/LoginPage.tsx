@@ -143,6 +143,32 @@ export function LoginPage() {
               Sign in
             </Button>
           </form>
+
+          <div className="mt-8 rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Demo Accounts
+            </p>
+            <div className="mt-3 space-y-2">
+              {([
+                { label: 'Admin', mobile: '9800000001', password: 'DemoAccess@123' },
+                { label: 'Service Center', mobile: '9800000002', password: 'DemoAccess@123' },
+                { label: 'Technician', mobile: '9800000003', password: 'DemoAccess@123' },
+              ] as const).map((demo) => (
+                <button
+                  key={demo.mobile}
+                  type="button"
+                  onClick={() => { setMobile(demo.mobile); setPassword(demo.password); setError(null); setFieldErrors({}); }}
+                  className="flex w-full items-center justify-between rounded-md border border-slate-200 bg-white px-3 py-2 text-left text-sm transition-colors hover:border-brand-300 hover:bg-brand-50"
+                >
+                  <span className="font-medium text-slate-700">{demo.label}</span>
+                  <span className="font-mono text-xs text-slate-400">{demo.mobile}</span>
+                </button>
+              ))}
+            </div>
+            <p className="mt-2 text-center text-xs text-slate-400">
+              Click a role to auto-fill credentials
+            </p>
+          </div>
         </div>
       </div>
     </div>
