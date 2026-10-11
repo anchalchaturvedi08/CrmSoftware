@@ -14,7 +14,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { KeyRound, Pencil, Plus, Power, UserCog } from 'lucide-react';
 import { useState } from 'react';
-import { useSearchParams } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import { toast } from 'sonner';
 import {
   ActiveBadge,
@@ -180,7 +180,13 @@ export function UsersPage() {
                   <tr key={user.id} className={cn(!user.isActive && 'bg-slate-50/60')}>
                     <td className="whitespace-nowrap px-5 py-3.5">
                       <p className={cn('font-medium', user.isActive ? 'text-slate-900' : 'text-slate-500')}>
-                        {user.name}
+                        {user.role === 'TECHNICIAN' ? (
+                          <Link to={`/admin/technicians/${user.id}`} className="hover:text-brand-700 hover:underline">
+                            {user.name}
+                          </Link>
+                        ) : (
+                          user.name
+                        )}
                         {self && <span className="ml-1.5 text-xs font-normal text-slate-500">(you)</span>}
                       </p>
                       {user.email && <p className="text-xs text-slate-500">{user.email}</p>}

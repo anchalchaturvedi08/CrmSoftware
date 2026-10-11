@@ -117,6 +117,9 @@ export const createServiceCenterSchema = z
     servedPincodes: z.array(pincode).max(500).default([]),
     location: coordinates.optional(),
     notes: z.string().trim().max(1000).optional(),
+    ownerName: z.string().trim().min(1, 'Owner name is required').max(160).optional(),
+    ownerMobile: mobile.optional(),
+    ownerPassword: z.string().min(12, 'Password must be at least 12 characters').max(256).optional(),
   })
   .refine((data) => Boolean(data.cityId) !== Boolean(data.cityName), {
     path: ['cityId'],
@@ -125,7 +128,17 @@ export const createServiceCenterSchema = z
   .refine((data) => !data.cityName || Boolean(data.state), {
     path: ['state'],
     message: 'State is required when providing a cityName',
-  });
+  })
+  .refine(
+    (data) => {
+      const has = [data.ownerName, data.ownerMobile, data.ownerPassword].filter(Boolean).length;
+      return has === 0 || has === 3;
+    },
+    {
+      path: ['ownerPassword'],
+      message: 'Owner name, mobile and password must all be provided together',
+    },
+  );
 
 export const updateServiceCenterSchema = z
   .object({

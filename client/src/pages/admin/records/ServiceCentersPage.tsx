@@ -287,6 +287,10 @@ export function CentreDialog({
   );
   const [notes, setNotes] = useState(centre?.notes ?? '');
 
+  const [ownerName, setOwnerName] = useState('');
+  const [ownerMobile, setOwnerMobile] = useState('');
+  const [ownerPassword, setOwnerPassword] = useState('');
+
   /* The next city to add to the coverage list. */
   const [addState, setAddState] = useState('');
   const [addCity, setAddCity] = useState('');
@@ -324,9 +328,16 @@ export function CentreDialog({
         servedPincodes: parsePincodes(servedPincodes).filter((p) => p !== pincode.trim()),
         ...(notes.trim() ? { notes: notes.trim() } : {}),
       };
-      return centre
-        ? api(`/service-centers/${centre.id}`, { method: 'PATCH', body })
-        : api('/service-centers', { method: 'POST', body: { ...body, code: code.trim() } });
+      if (centre) {
+        return api(`/service-centers/${centre.id}`, { method: 'PATCH', body });
+      }
+      const createBody: Record<string, unknown> = { ...body, code: code.trim() };
+      if (ownerName.trim() && ownerMobile.trim() && ownerPassword) {
+        createBody.ownerName = ownerName.trim();
+        createBody.ownerMobile = ownerMobile.replace(/\D/g, '');
+        createBody.ownerPassword = ownerPassword;
+      }
+      return api('/service-centers', { method: 'POST', body: createBody });
     },
     onSuccess: async () => {
       toast.success(centre ? 'Service center updated' : 'Service center added');
@@ -347,6 +358,14 @@ export function CentreDialog({
     if (!PINCODE.test(pincode.trim())) found['pincode'] = 'Pincode must be 6 digits';
     const badPincodes = parsePincodes(servedPincodes).filter((p) => !PINCODE.test(p));
     if (badPincodes.length > 0) found['servedPincodes'] = `Not a 6-digit pincode: ${badPincodes.slice(0, 3).join(', ')}`;
+    if (!centre) {
+      const hasAny = ownerName.trim() || ownerMobile.trim() || ownerPassword;
+      if (hasAny) {
+        if (!ownerName.trim()) found['ownerName'] = 'Enter the owner’s name';
+        if (!MOBILE.test(ownerMobile.replace(/\D/g, ''))) found['ownerMobile'] = 'Enter a valid 10-digit mobile number';
+        if (!ownerPassword || ownerPassword.length < 12) found['ownerPassword'] = 'Password must be at least 12 characters';
+      }
+    }
     setErrors(found);
     if (Object.keys(found).length === 0) save.mutate();
   };
@@ -479,6 +498,43 @@ export function CentreDialog({
             />
           </div>
         </section>
+
+        {!centre && (
+          <section>
+            <h3 className="text-sm font-semibold text-slate-900">Owner account (optional)</h3>
+            <p className="mt-0.5 text-sm text-slate-500">
+              Create a Service Center Owner who can sign in and manage this centre. You can also add one later from the Users page.
+            </p>
+            <div className="mt-3 grid gap-4 sm:grid-cols-2">
+              <Input
+                label="Owner name"
+                value={ownerName}
+                onChange={(e) => setOwnerName(e.target.value)}
+                error={errors['ownerName']}
+                autoComplete="off"
+              />
+              <Input
+                label="Owner mobile"
+                type="tel"
+                inputMode="numeric"
+                placeholder="98765 43210"
+                value={ownerMobile}
+                onChange={(e) => setOwnerMobile(e.target.value)}
+                error={errors['ownerMobile']}
+                autoComplete="off"
+              />
+              <Input
+                label="Owner password"
+                type="password"
+                value={ownerPassword}
+                onChange={(e) => setOwnerPassword(e.target.value)}
+                error={errors['ownerPassword']}
+                hint="At least 12 characters"
+                autoComplete="new-password"
+              />
+            </div>
+          </section>
+        )}
 
         <Textarea label="Notes (optional)" value={notes} onChange={(e) => setNotes(e.target.value)} error={errors['notes']} className="min-h-[64px]" />
       </div>

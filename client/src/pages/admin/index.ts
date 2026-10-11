@@ -14,5 +14,6 @@ export { ServiceCentersPage } from './records/ServiceCentersPage';
 export { ServiceCenterDetailPage } from './records/ServiceCenterDetailPage';
 export { SettingsPage } from './SettingsPage';
 export { SlaPage } from './records/SlaPage';
+export { TechnicianDetailPage } from './records/TechnicianDetailPage';
 export { UsersPage } from './records/UsersPage';
 export { VisitsPage } from './VisitsPage';

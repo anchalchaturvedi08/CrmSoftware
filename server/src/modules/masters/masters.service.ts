@@ -27,6 +27,7 @@ import {
   ProductModel,
   ServiceCenter,
   Territory,
+  User,
   type CityDoc,
   type ComplaintDoc,
   type CustomerDoc,
@@ -35,6 +36,7 @@ import {
   type ServiceCenterDoc,
   type TerritoryDoc,
 } from '../../models/index.js';
+import { hashPassword } from '../../core/password.js';
 import { TERMINAL_STATUSES } from '../../models/enums.js';
 import { findOrCreateCity, resolveCity, resolveState } from './geography.resolve.js';
 import type {
@@ -328,6 +330,28 @@ export async function createServiceCenter(
     actor: actorFor(auth),
     note: `${input.name} (${input.code})`,
   });
+
+  if (input.ownerName && input.ownerMobile && input.ownerPassword) {
+    if (await User.findOne({ mobile: input.ownerMobile }).lean().exec()) {
+      throw conflict(`A user with mobile ${input.ownerMobile} already exists`);
+    }
+    const passwordHash = await hashPassword(input.ownerPassword);
+    const owner = await User.create({
+      role: 'SERVICE_CENTER_OWNER',
+      name: input.ownerName,
+      mobile: input.ownerMobile,
+      passwordHash,
+      serviceCenterId: centre._id,
+      mustChangePassword: false,
+    });
+    await recordAudit({
+      entityType: 'User',
+      entityId: String(owner._id),
+      action: 'USER_CREATED',
+      actor: actorFor(auth),
+      note: `Owner ${input.ownerName} for ${input.code}`,
+    });
+  }
 
   return centre;
 }

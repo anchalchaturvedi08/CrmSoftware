@@ -128,7 +128,9 @@ export function TechniciansPage() {
                   <tr key={technician.id} className={cn(!technician.isActive && 'bg-slate-50/60')}>
                     <td className="whitespace-nowrap px-5 py-3.5">
                       <p className={cn('font-medium', technician.isActive ? 'text-slate-900' : 'text-slate-500')}>
-                        {technician.name}
+                        <Link to={`/center/technicians/${technician.id}`} className="hover:text-brand-700 hover:underline">
+                          {technician.name}
+                        </Link>
                       </p>
                       {technician.email && <p className="mt-0.5 text-xs text-slate-500">{technician.email}</p>}
                     </td>

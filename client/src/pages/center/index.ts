@@ -7,5 +7,6 @@ export { DashboardPage } from './DashboardPage';
 export { PartsPage } from './PartsPage';
 export { ProfilePage } from './ProfilePage';
 export { ReportsPage } from './ReportsPage';
+export { TechnicianDetailPage } from '../admin/records/TechnicianDetailPage';
 export { TechniciansPage } from './TechniciansPage';
 export { VisitsPage } from './VisitsPage';

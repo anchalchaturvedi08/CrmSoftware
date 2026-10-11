@@ -40,6 +40,7 @@ const ProductsPage = lazy(() => admin().then((m) => ({ default: m.ProductsPage }
 const ServiceCentersPage = lazy(() => admin().then((m) => ({ default: m.ServiceCentersPage })));
 const ServiceCenterDetailPage = lazy(() => admin().then((m) => ({ default: m.ServiceCenterDetailPage })));
 const UsersPage = lazy(() => admin().then((m) => ({ default: m.UsersPage })));
+const AdminTechnicianDetailPage = lazy(() => admin().then((m) => ({ default: m.TechnicianDetailPage })));
 const AdminPartsPage = lazy(() => admin().then((m) => ({ default: m.PartsPage })));
 const SlaPage = lazy(() => admin().then((m) => ({ default: m.SlaPage })));
 const ReportsPage = lazy(() => admin().then((m) => ({ default: m.ReportsPage })));
@@ -52,6 +53,7 @@ const CenterComplaintsPage = lazy(() => center().then((m) => ({ default: m.Compl
 const CenterComplaintDetailPage = lazy(() => center().then((m) => ({ default: m.ComplaintDetailPage })));
 const CenterVisitsPage = lazy(() => center().then((m) => ({ default: m.VisitsPage })));
 const CenterTechniciansPage = lazy(() => center().then((m) => ({ default: m.TechniciansPage })));
+const CenterTechnicianDetailPage = lazy(() => center().then((m) => ({ default: m.TechnicianDetailPage })));
 const CenterPartsPage = lazy(() => center().then((m) => ({ default: m.PartsPage })));
 const CenterProfilePage = lazy(() => center().then((m) => ({ default: m.ProfilePage })));
 const CenterReportsPage = lazy(() => center().then((m) => ({ default: m.ReportsPage })));
@@ -137,6 +139,7 @@ export function App() {
               <Route path="service-centers" element={<ServiceCentersPage />} />
               <Route path="service-centers/:id" element={<ServiceCenterDetailPage />} />
               <Route path="technicians" element={<UsersPage />} />
+              <Route path="technicians/:id" element={<AdminTechnicianDetailPage />} />
               <Route path="parts" element={<AdminPartsPage />} />
               <Route path="sla" element={<SlaPage />} />
               <Route path="visits" element={<VisitsPage />} />
@@ -159,6 +162,7 @@ export function App() {
               <Route path="complaints/:id" element={<CenterComplaintDetailPage />} />
               <Route path="visits" element={<CenterVisitsPage />} />
               <Route path="technicians" element={<CenterTechniciansPage />} />
+              <Route path="technicians/:id" element={<CenterTechnicianDetailPage />} />
               <Route path="parts" element={<CenterPartsPage />} />
               {/* The same page as Admin's; the server scopes every figure to this centre. */}
               <Route path="reports" element={<CenterReportsPage />} />
