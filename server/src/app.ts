@@ -28,7 +28,7 @@ import { slaRouter } from './modules/sla/sla.routes.js';
 import { reportsRouter } from './modules/reports/reports.routes.js';
 /* Registers every schema with Mongoose. Must happen before any write, or the
    referential-integrity plugin cannot resolve a `ref` to its model. */
-import { User, SlaRule, DEFAULT_SLA_RULES, Territory, City, ServiceCenter, Product, ProductModel, Part, PartStock, Customer } from './models/index.js';
+import { User, SlaRule, DEFAULT_SLA_RULES, Territory, City, ServiceCenter, Product, ProductModel, Customer } from './models/index.js';
 import { hashPassword } from './core/password.js';
 
 export function createApp(): Express {
